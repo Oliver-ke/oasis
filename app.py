@@ -1,16 +1,61 @@
+import html
+
 import streamlit as st
 
 from oasis.config import load_settings
 from oasis.embeddings import get_embedder
-from oasis.llm import get_llm
-from oasis.graph_store import GraphStore
-from oasis.graph_rag import graph_retrieve
-from oasis.vector_rag import vector_retrieve
 from oasis.generate import answer
+from oasis.graph_rag import graph_retrieve
+from oasis.graph_store import GraphStore
+from oasis.llm import get_llm
+from oasis.vector_rag import vector_retrieve
 
-st.set_page_config(page_title="Oasis — knowledge graph chat", layout="wide")
+st.set_page_config(page_title="oasis · knowledge graph", layout="wide")
 
-DEMO_QUESTION = "Why does the auth service retry three times, and who owns that decision?"
+DEMO_QUESTION = (
+    "Why does the auth service retry three times, and who owns that decision?"
+)
+
+# Terminal / phosphor theme. The dark base + monospace come from
+# .streamlit/config.toml; this adds the accent + REPL polish on top.
+_TERMINAL_CSS = """
+<style>
+:root {
+  --oa-accent:#4AF6A0; --oa-dim:#6B7A72; --oa-border:#1E2A27; --oa-panel:#11201C;
+}
+.stApp { background:#0B0F0E; }
+/* nicer monospace on text surfaces (icons are left untouched) */
+[data-testid="stMarkdownContainer"],
+textarea[data-testid="stChatInputTextArea"],
+.stTextInput input {
+  font-family:"JetBrains Mono","Cascadia Code","SFMono-Regular",Menlo,Consolas,monospace !important;
+}
+h1, h2, h3 { color:var(--oa-accent) !important; letter-spacing:.3px; }
+[data-testid="stMarkdownContainer"] a { color:var(--oa-accent) !important; }
+[data-testid="stMarkdownContainer"] code {
+  color:var(--oa-accent) !important; background:var(--oa-panel) !important;
+  padding:1px 5px; border-radius:4px;
+}
+/* chat input as a terminal field with a phosphor caret */
+[data-testid="stChatInput"] { border:1px solid var(--oa-border); border-radius:6px; }
+textarea[data-testid="stChatInputTextArea"] { color:#B7F5D2 !important; }
+/* config popover trigger reads like a terminal button */
+[data-testid="stPopover"] button {
+  border:1px solid var(--oa-border) !important; color:var(--oa-accent) !important;
+  background:var(--oa-panel) !important;
+}
+/* dim, monospace captions */
+[data-testid="stCaptionContainer"] { color:var(--oa-dim) !important; }
+/* hide chat avatars — the phosphor "&gt;" prompt marks the user line instead */
+[data-testid="stChatMessageAvatarUser"],
+[data-testid="stChatMessageAvatarAssistant"] { display:none !important; }
+[data-testid="stChatMessage"] { background:transparent; padding-left:0; }
+</style>
+"""
+
+
+def _inject_theme():
+    st.markdown(_TERMINAL_CSS, unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -33,7 +78,11 @@ def _render_citations(citations):
 def _render_turn(turn, settings):
     """Render a single stored turn dict without any LLM recomputation."""
     with st.chat_message("user"):
-        st.markdown(turn["question"])
+        st.markdown(
+            f"<span style='color:#4AF6A0;font-weight:700'>&gt;</span> "
+            f"{html.escape(turn['question'])}",
+            unsafe_allow_html=True,
+        )
 
     with st.chat_message("assistant"):
         st.markdown(turn["g_answer"])
@@ -45,6 +94,7 @@ def _render_turn(turn, settings):
 
         if settings.enable_graph_viz and turn["g_triples"]:
             from oasis.viz import render_subgraph
+
             st.markdown("**Traversed subgraph**")
             render_subgraph(turn["g_triples"], turn.get("g_node_types"))
 
@@ -62,29 +112,31 @@ def _render_turn(turn, settings):
 
 def main():
     settings, embedder, llm, gs = _bootstrap()
+    _inject_theme()
 
-    st.title("Oasis")
-    st.caption("Ask anything about the codebase. Follow-ups carry context.")
-
-    # Sidebar controls
-    st.sidebar.header("Options")
-    compare = st.sidebar.toggle("Show vector-baseline comparison", value=False)
-    k = st.sidebar.slider(
-        "Baseline top-k",
-        min_value=1,
-        max_value=5,
-        value=3,
-        help="How many chunks the plain vector baseline retrieves.",
-    )
-    if st.sidebar.button("Clear chat"):
-        st.session_state["messages"] = []
-        st.rerun()
-
-    if compare:
-        st.sidebar.caption(
-            "Baseline comparison is ON. New turns will include a vector-search expander. "
-            "Prior turns without a baseline won't be updated retroactively."
-        )
+    # Header row: prompt-style title on the left, config dropdown on the right.
+    head, cfg = st.columns([5, 1], vertical_alignment="bottom")
+    with head:
+        st.markdown("## OASIS")
+        st.caption("Knowledge center for company information, connect to all sources")
+    with cfg:
+        with st.popover("config", use_container_width=True):
+            compare = st.toggle("vector-baseline comparison", value=False)
+            k = st.slider(
+                "baseline top-k",
+                min_value=1,
+                max_value=5,
+                value=3,
+                help="How many chunks the plain vector baseline retrieves.",
+            )
+            if compare:
+                st.caption(
+                    "on — new answers get a vector-search expander; "
+                    "earlier turns aren't backfilled."
+                )
+            if st.button("clear chat", use_container_width=True):
+                st.session_state["messages"] = []
+                st.rerun()
 
     # Initialise transcript
     if "messages" not in st.session_state:
@@ -135,14 +187,16 @@ def main():
             }
 
         # --- Store and rerun ---
-        messages.append({
-            "question": prompt,
-            "g_answer": g_answer,
-            "g_citations": g.citations,
-            "g_triples": g.triples,
-            "g_node_types": g.node_types,
-            "baseline": baseline,
-        })
+        messages.append(
+            {
+                "question": prompt,
+                "g_answer": g_answer,
+                "g_citations": g.citations,
+                "g_triples": g.triples,
+                "g_node_types": g.node_types,
+                "baseline": baseline,
+            }
+        )
         st.rerun()
 
 

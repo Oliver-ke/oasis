@@ -84,7 +84,7 @@ def render_subgraph(triples, node_types=None) -> None:
             present.append(t)
     legend = " &nbsp; ".join(
         f"<span style='color:{_colors(t)[0]};font-size:17px;vertical-align:middle'>&#9679;</span>"
-        f"<span style='font-size:13px;color:#3c3c3c;vertical-align:middle'> {t}</span>"
+        f"<span style='font-size:13px;color:#9BB0A6;vertical-align:middle'> {t}</span>"
         for t in sorted(present)
     )
     st.markdown(legend, unsafe_allow_html=True)

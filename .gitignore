@@ -13,3 +13,4 @@ __pycache__/
 .playwright-mcp/
 oasis-*.png
 viz-*.png
+*.png
