@@ -49,11 +49,3 @@ Sources are pluggable connectors in `oasis/sources.py`: implement the `Source`
 protocol (a `tool` name + `fetch()` returning provenance-tagged docs), append it to
 `SOURCES`, and re-run `ingest.py`. Everything downstream is agnostic to where the
 documents came from.
-
-## Notes
-
-- **Honest comparison:** both panels use the same `get_llm()` + `build_prompt()`;
-  the graph (Neo4j) and vector (Chroma) stores are separate, only retrieval differs.
-- **Out of scope** (mocked/skipped): real OAuth connectors, incremental sync,
-  permission filtering, and eval harness. The connectors return a fixed in-memory
-  corpus standing in for real integrations.
