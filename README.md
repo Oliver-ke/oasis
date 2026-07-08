@@ -1,3 +1,5 @@
+![Oasis — one question, every source, one answer](oasis-landing.jpg)
+
 # Oasis — one question, four sources (GraphRAG demo)
 
 Ask a plain-language question whose answer is scattered across **Linear, Notion,
