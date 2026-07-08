@@ -1,10 +1,10 @@
 ![Oasis — one question, every source, one answer](oasis-landing.jpg)
 
-# Oasis — one question, four sources (GraphRAG demo)
+# Oasis, ask one question, four sources (GraphRAG demo)
 
 Ask a plain-language question whose answer is scattered across **Linear, Notion,
 Confluence, and the codebase**. Oasis returns one assembled answer that cites all
-four. It's **GraphRAG** — entities and relationships in a Neo4j graph — so it can
+four. It's **GraphRAG** entities and relationships in a Neo4j graph, so it can
 walk the full *incident → decision → code → owner* chain instead of returning a
 single fragment. An optional toggle compares it to a plain vector-search baseline
 using the **same LLM and prompt**, so the only variable is retrieval.
@@ -15,7 +15,7 @@ using the **same LLM and prompt**, so the only variable is retrieval.
 
 - **GraphRAG** cites all four: Linear (`INC-231`), Confluence (`ADR-014`), Codebase
   (`MAX_RETRIES = 3`), Notion (owner: Platform Identity / Priya Sharma).
-- **Vector baseline** answers the *why* but misses the owner — vector similarity
+- **Vector baseline** answers the *why* but misses the owner - vector similarity
   never surfaces the Notion page.
 
 ## Quickstart
@@ -53,7 +53,7 @@ documents came from.
 ## Notes
 
 - **Honest comparison:** both panels use the same `get_llm()` + `build_prompt()`;
-  the graph (Neo4j) and vector (Chroma) stores are separate — only retrieval differs.
+  the graph (Neo4j) and vector (Chroma) stores are separate, only retrieval differs.
 - **Out of scope** (mocked/skipped): real OAuth connectors, incremental sync,
   permission filtering, and eval harness. The connectors return a fixed in-memory
   corpus standing in for real integrations.
